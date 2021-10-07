@@ -22,6 +22,7 @@ export enum ChainName {
     WAX = 10,
     PROTON = 11,
     FIO = 12,
+    PROTON_TEST = 13,
 }
 
 export type ChainIdType = ChainId | ChainName | Checksum256Type
@@ -43,9 +44,9 @@ export class ChainId extends Checksum256 {
 
     get chainVariant(): ChainIdVariant {
         const name = this.chainName
-        if (name !== ChainName.UNKNOWN) {
-            return ChainIdVariant.from(['chain_alias', name])
-        }
+        // if (name !== ChainName.UNKNOWN) {
+        //     return ChainIdVariant.from(['chain_alias', name])
+        // }
         return ChainIdVariant.from(this)
     }
 
@@ -88,4 +89,5 @@ const ChainIdLookup = new Map<ChainName, Checksum256Type>([
     [ChainName.WAX, '1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4'],
     [ChainName.PROTON, '384da888112027f0321850a169f737c33e53b388aad48b5adace4bab97f437e0'],
     [ChainName.FIO, '21dcae42c0182200e93f954a074011f9048a7624c6fe81d3c9541a614a88bd1c'],
+    [ChainName.PROTON_TEST, '71ee83bcf52142d61019d95f9cc5427ba6a0d7ff8accd9e2088ae2abeaf3d3dd'],
 ])

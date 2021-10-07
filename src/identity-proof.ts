@@ -19,7 +19,7 @@ import {
 
 import {IdentityV3} from './abi'
 import {ChainId, ChainIdType} from './chain-id'
-import {CallbackPayload, SigningRequest, SigningRequestEncodingOptions} from './signing-request'
+import {CallbackPayload, DEFAULT_SCHEME, SigningRequest, SigningRequestEncodingOptions} from './signing-request'
 import * as Base64u from './base64u'
 
 export type IdentityProofType =
@@ -27,7 +27,7 @@ export type IdentityProofType =
     | string
     | {
           chainId: ChainIdType
-          scope: NameType
+        //   scope: NameType
           expiration: TimePointType
           signer: PermissionLevelType
           signature: SignatureType
@@ -36,7 +36,7 @@ export type IdentityProofType =
 @Struct.type('identity_proof')
 export class IdentityProof extends Struct {
     @Struct.field(ChainId) chainId!: ChainId
-    @Struct.field(Name) scope!: Name
+    // @Struct.field(Name) scope!: Name
     @Struct.field(TimePointSec) expiration!: TimePointSec
     @Struct.field(PermissionLevel) signer!: PermissionLevel
     @Struct.field(Signature) signature!: Signature
@@ -65,14 +65,14 @@ export class IdentityProof extends Struct {
     }
 
     /** Create a new instance from a callback payload. */
-    static fromPayload(payload: CallbackPayload, options: SigningRequestEncodingOptions = {}) {
+    static fromPayload(payload: CallbackPayload, options: SigningRequestEncodingOptions = {scheme: DEFAULT_SCHEME}) {
         const request = SigningRequest.from(payload.req, options)
         if (!(request.version >= 3 && request.isIdentity())) {
             throw new Error('Not an identity request')
         }
         return this.from({
             chainId: payload.cid || request.getChainId(),
-            scope: request.getIdentityScope()!,
+            // scope: request.getIdentityScope()!,
             expiration: payload.ex,
             signer: {actor: payload.sa, permission: payload.sp},
             signature: payload.sig,
@@ -88,7 +88,10 @@ export class IdentityProof extends Struct {
             account: '',
             name: 'identity',
             authorization: [this.signer],
-            data: IdentityV3.from({scope: this.scope, permission: this.signer}),
+            data: IdentityV3.from({
+                // scope: this.scope,
+                permission: this.signer
+            }),
         })
         return Transaction.from({
             ref_block_num: 0,

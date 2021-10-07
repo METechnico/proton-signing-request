@@ -28,7 +28,7 @@ export class IdentityV2 extends Struct {
 
 @Struct.type('identity')
 export class IdentityV3 extends Struct {
-    @Struct.field('name') scope!: Name
+    // @Struct.field('name') scope!: Name
     @Struct.field(PermissionLevel, {optional: true}) permission?: PermissionLevel
 }
 

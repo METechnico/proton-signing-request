@@ -49,7 +49,7 @@ import {
 import {IdentityProof} from './identity-proof'
 
 /** Current supported protocol version, backwards compatible with version 2. */
-export const ProtocolVersion = 3
+export const ProtocolVersion = 2
 
 /** Interface that should be implemented by abi providers. */
 export interface AbiProvider {
@@ -145,7 +145,7 @@ export interface TransactionContext {
     chainId?: ChainIdType
 }
 
-const DEFAULT_SCHEME = 'esr'
+export const DEFAULT_SCHEME = 'esr'
 
 /**
  * The placeholder name: `............1` aka `uint64(1)`.
@@ -247,7 +247,7 @@ export interface SigningRequestCreateArguments extends SigningRequestCommonArgum
     transaction?: Partial<AnyTransaction>
     /** Create an identity request. */
     identity?: {
-        scope?: NameType
+        // scope?: NameType
         permission?: PermissionLevelType
     }
     /** Whether wallet should broadcast tx, defaults to true. */
@@ -277,7 +277,7 @@ export interface SigningRequestCreateIdentityArguments extends SigningRequestCom
     /**
      * Scope for the request.
      */
-    scope?: NameType
+    // scope?: NameType
 }
 
 export interface SigningRequestEncodingOptions {
@@ -288,7 +288,7 @@ export interface SigningRequestEncodingOptions {
     /** Optional signature provider, will be used to create a request signature if provided. */
     signatureProvider?: SignatureProvider
     /** Custom Scheme . */
-    scheme?: string
+    scheme: 'esr' | 'proton' | 'proton-dev'
 }
 
 export type AbiMap = Map<string, ABI>
@@ -314,7 +314,7 @@ export class SigningRequest {
     /** Create a new signing request. */
     public static async create(
         args: SigningRequestCreateArguments,
-        options: SigningRequestEncodingOptions = {}
+        options: SigningRequestEncodingOptions = {scheme: DEFAULT_SCHEME}
     ) {
         let actions: AnyAction[]
         if (args.action) {
@@ -355,7 +355,7 @@ export class SigningRequest {
      */
     public static createSync(
         args: SigningRequestCreateArguments,
-        options: SigningRequestEncodingOptions = {},
+        options: SigningRequestEncodingOptions = {scheme: DEFAULT_SCHEME},
         abis: Record<string, ABIDef> = {}
     ) {
         let version = 2
@@ -363,15 +363,15 @@ export class SigningRequest {
         const encode = (action: AnyAction) => encodeAction(action, abis)
 
         // multi-chain requests requires version 3
-        if (args.chainId === null) {
-            version = 3
-        }
+        // if (args.chainId === null) {
+        //     version = 3
+        // }
 
         // set the request data
         if (args.identity !== undefined) {
-            if (args.identity.scope) {
-                version = 3
-            }
+            // if (args.identity.scope) {
+            //     version = 3
+            // }
             data.req = ['identity', this.identityType(version).from(args.identity)]
         } else if (args.action && !args.actions && !args.transaction) {
             data.req = ['action', encode(args.action)]
@@ -467,13 +467,14 @@ export class SigningRequest {
             })
         }
 
+        console.log(data)
+
         const req = new SigningRequest(
             version,
             this.storageType(version).from(data),
+            options.scheme,
             options.zlib,
             options.abiProvider,
-            undefined,
-            options.scheme
         )
 
         // sign the request if given a signature provider
@@ -487,7 +488,7 @@ export class SigningRequest {
     /** Creates an identity request. */
     public static identity(
         args: SigningRequestCreateIdentityArguments,
-        options: SigningRequestEncodingOptions = {}
+        options: SigningRequestEncodingOptions = {scheme: DEFAULT_SCHEME}
     ) {
         let permission: PermissionLevelType | undefined = {
             actor: args.account || PlaceholderName,
@@ -504,7 +505,7 @@ export class SigningRequest {
                 ...args,
                 identity: {
                     permission,
-                    scope: args.scope,
+                    // scope: args.scope,
                 },
                 broadcast: false,
             },
@@ -521,7 +522,7 @@ export class SigningRequest {
     public static fromTransaction(
         chainId: ChainIdType,
         serializedTransaction: BytesType,
-        options: SigningRequestEncodingOptions = {}
+        options: SigningRequestEncodingOptions = {scheme: DEFAULT_SCHEME}
     ) {
         const id = ChainId.from(chainId)
         serializedTransaction = Bytes.from(serializedTransaction)
@@ -539,7 +540,7 @@ export class SigningRequest {
     }
 
     /** Creates a signing request from encoded `esr:` uri string. */
-    public static from(uri: string, options: SigningRequestEncodingOptions = {}) {
+    public static from(uri: string, options: SigningRequestEncodingOptions = {scheme: DEFAULT_SCHEME}) {
         if (typeof uri !== 'string') {
             throw new Error('Invalid request uri')
         }
@@ -554,7 +555,7 @@ export class SigningRequest {
         return SigningRequest.fromData(data, options)
     }
 
-    public static fromData(data: BytesType, options: SigningRequestEncodingOptions = {}) {
+    public static fromData(data: BytesType, options: SigningRequestEncodingOptions = {scheme: DEFAULT_SCHEME}) {
         data = Bytes.from(data)
         const header = data.array[0]
         const version = header & ~(1 << 7)
@@ -577,10 +578,10 @@ export class SigningRequest {
         return new SigningRequest(
             version,
             req,
+            options.scheme,
             options.zlib,
             options.abiProvider,
-            sig,
-            options.scheme
+            sig
         )
     }
 
@@ -592,7 +593,7 @@ export class SigningRequest {
 
     /** The request signature. */
     public signature?: RequestSignature
-    public scheme: string = DEFAULT_SCHEME
+    public scheme: SigningRequestEncodingOptions['scheme'] = DEFAULT_SCHEME
 
     private zlib?: ZlibProvider
     private abiProvider?: AbiProvider
@@ -604,10 +605,10 @@ export class SigningRequest {
     constructor(
         version: number,
         data: RequestDataV2 | RequestDataV3,
+        scheme: SigningRequestEncodingOptions['scheme'],
         zlib?: ZlibProvider,
         abiProvider?: AbiProvider,
         signature?: RequestSignature,
-        scheme?: string
     ) {
         if (data.flags.broadcast && data.req.variantName === 'identity') {
             throw new Error('Invalid request (identity request cannot be broadcast)')
@@ -902,9 +903,9 @@ export class SigningRequest {
 
     /**
      * Get Scheme
-     * @returns scheme like 'esr'
+     * @returns scheme
      */
-     public getScheme(): string {
+    public getScheme(): SigningRequestEncodingOptions['scheme'] {
         return this.scheme
     }
 
@@ -977,11 +978,17 @@ export class SigningRequest {
                     ]
                 } else {
                     // eslint-disable-next-line prefer-const
-                    let {scope, permission} = req.value as IdentityV3
+                    let {
+                        // scope,
+                        permission
+                    } = req.value as IdentityV3
                     if (!permission) {
                         permission = PlaceholderAuth
                     }
-                    const data = Serializer.encode({object: {scope, permission}, type: IdentityV3})
+                    const data = Serializer.encode({object: {
+                        // scope,
+                        permission
+                    }, type: IdentityV3})
                     return [
                         Action.from({
                             account: '',
@@ -1074,13 +1081,13 @@ export class SigningRequest {
      * @note This returns `nil` unless a specific permission has been requested,
      *       use `isIdentity` to check id requests.
      */
-    public getIdentityScope(): Name | null {
-        if (!this.isIdentity() || this.version <= 2) {
-            return null
-        }
-        const id = this.data.req.value as IdentityV3
-        return id.scope
-    }
+    // public getIdentityScope(): Name | null {
+    //     if (!this.isIdentity() || this.version <= 2) {
+    //         return null
+    //     }
+    //     const id = this.data.req.value as IdentityV3
+    //     return id.scope
+    // }
 
     /** Get raw info dict */
     public getRawInfo(): {[key: string]: Bytes} {
@@ -1145,7 +1152,14 @@ export class SigningRequest {
         }
         const RequestData = (this.constructor as typeof SigningRequest).storageType(this.version)
         const data = RequestData.from(JSON.parse(JSON.stringify(this.data)))
-        return new SigningRequest(this.version, data, this.zlib, this.abiProvider, signature)
+        return new SigningRequest(
+            this.version,
+            data,
+            this.scheme,
+            this.zlib,
+            this.abiProvider,
+            signature,
+        )
     }
 
     // Convenience methods.
@@ -1163,7 +1177,7 @@ export class ResolvedSigningRequest {
     /** Recreate a resolved request from a callback payload. */
     static async fromPayload(
         payload: CallbackPayload,
-        options: SigningRequestEncodingOptions = {}
+        options: SigningRequestEncodingOptions = {scheme: DEFAULT_SCHEME}
     ): Promise<ResolvedSigningRequest> {
         const request = SigningRequest.from(payload.req, options)
         const abis = await request.fetchAbis()
@@ -1257,7 +1271,7 @@ export class ResolvedSigningRequest {
         }
         return IdentityProof.from({
             chainId: this.chainId,
-            scope: this.request.getIdentityScope()!,
+            // scope: this.request.getIdentityScope()!,
             expiration: this.transaction.expiration,
             signer: this.signer,
             signature,

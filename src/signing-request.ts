@@ -560,7 +560,7 @@ export class SigningRequest {
         const header = data.array[0]
         const version = header & ~(1 << 7)
         if (version !== 2 && version !== 3) {
-            throw new Error('Unsupported protocol version')
+            throw new Error(`Unsupported protocol version ${version}`)
         }
         let payload = data.droppingFirst(1)
         if ((header & (1 << 7)) !== 0) {

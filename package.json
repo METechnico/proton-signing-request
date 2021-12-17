@@ -1,6 +1,6 @@
 {
-    "name": "@bloks/signing-request",
-    "version": "2.2.2-8",
+    "name": "@proton/signing-request",
+    "version": "2.2.2-9",
     "description": "Proton Signing Request (ESR / EEP-7) encoder and decoder",
     "homepage": "https://github.com/greymass/eosio-signing-request",
     "license": "MIT",

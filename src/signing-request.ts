@@ -467,8 +467,6 @@ export class SigningRequest {
             })
         }
 
-        console.log(data)
-
         const req = new SigningRequest(
             version,
             this.storageType(version).from(data),

@@ -2,7 +2,7 @@
     "name": "@proton/signing-request",
     "version": "3.2.4",
     "description": "Proton Signing Request (ESR / EEP-7) encoder and decoder",
-    "homepage": "https://github.com/greymass/eosio-signing-request",
+    "homepage": "https://github.com/ProtonProtocol/proton-signing-request",
     "license": "MIT",
     "main": "lib/esr.js",
     "module": "lib/esr.m.js",

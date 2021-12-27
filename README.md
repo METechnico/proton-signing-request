@@ -1,52 +1,41 @@
-# eosio-signing-request (ESR - Revision 3)
-![version](https://badgen.net/npm/v/eosio-signing-request?style=for-the-badge)
-![license](https://badgen.net/npm/license/eosio-signing-request?style=for-the-badge)
-![downloads](https://badgen.net/npm/dw/eosio-signing-request?style=for-the-badge)
+# proton-signing-request (PSR - Revision 3)
+![version](https://badgen.net/npm/v/@proton/signing-request?style=for-the-badge)
+![license](https://badgen.net/npm/license/@proton/signing-request?style=for-the-badge)
+![downloads](https://badgen.net/npm/dw/@proton/signing-request?style=for-the-badge)
 
-A library to assist with the EOSIO Signing Request (ESR) protocol.
-The full specification for ESR (Revision 3) is available here:
+A library to assist with the Proton Signing Request (PSR) protocol.
 
-https://github.com/eosio-eps/EEPs/blob/master/EEPS/eep-7.md
-
-The ESR protocol allows for an application (dapp) to generate signature requests (transactions) which can then be passed to signers (wallets) for signature creation. These signature requests can be used within URI links, QR Codes, or other transports between applications and signers.
+The PSR protocol allows for an application (dapp) to generate signature requests (transactions) which can then be passed to signers (wallets) for signature creation. These signature requests can be used within URI links, QR Codes, or other transports between applications and signers.
 
 ---
 
 ## Installation
 
-To add eosio-signing-request to your project, install via the package manager of your choice:
+To install via the package manager of your choice:
 
 #### NPM
 
-```npm install eosio-signing-request```
+```npm install @proton/signing-request```
 
 #### Yarn
 
-```yarn add eosio-signing-request```
+```yarn add @proton/signing-request```
 
 ---
 
 ## Signing Request Flow
 
-In an environment where an ***application/dapp*** is requesting that an end user perform a transaction within their preferred ***signer/wallet***, each of these applications will utilize the `eosio-signing-request` library to fulfill different roles.
+In an environment where an ***application/dapp*** is requesting that an end user perform a transaction within their preferred ***signer/wallet***, each of these applications will utilize the `@proton/signing-request` library to fulfill different roles.
 
 - The ***application/dapp*** will be creating and encoding the signing request.
 - The ***signer/wallet*** will be decoding and resolving the signing request.
 
 The specification itself then allows either the ***signer/wallet*** itself to broadcast the finalized transaction, or the transaction/signature themselves can be passed back to the ***application/dapp*** to broadcast.
 
-The `eosio-signing-request` library is not responsible for transporting this information between the ***application/dapp***
+The `@proton/signing-request` library is not responsible for transporting this information between the ***application/dapp***
 and ***signer/wallet***, and so this topic will not be covered in this README.
 
 ---
-
-## Usage Examples
-
-These examples will use nodejs to create and manipulate a signing request, which can then be sent to any compatible signer for signature creation and ultimately sent to an EOSIO blockchain.
-
-The code within this README will show partial snippets of the process, with full working examples located here:
-
-https://github.com/greymass/eosio-signing-request-demo
 
 #### Sample Transaction/Actions
 
@@ -59,12 +48,12 @@ const actions = [{
     account: 'eosio',
     name: 'voteproducer',
     authorization: [{
-      actor: '............1',
-      permission: '............2'
+      actor: 'taskly',
+      permission: 'active'
     }],
     data: {
-        voter: '............1',
-        proxy: 'greymassvote',
+        voter: 'taskle',
+        proxy: 'cafe',
         producers: [],
     }
 }]
@@ -101,7 +90,7 @@ const opts = {
 
 ### Creating a Signing Request
 
-With the above actions established, to create the signing request itself we use the eosio-signing-request library and its `create` method. The full working example to create this request [can be found here](https://github.com/greymass/eosio-signing-request-demo/blob/master/examples/encode.js).
+With the above actions established, to create the signing request itself we use the @proton/signing-request library and its `create` method. 
 
 (ES8 or TypeScript)
 ```js
@@ -175,8 +164,7 @@ Using the encoded signing request generated in the example above:
 const uri = 'esr://gmNgZGRkAIFXBqEFopc6760yugsVYWBggtKCMIEFRnclpF9eTWUACgAA'
 ```
 
-Another application can now decode this request into an instance of a `SigningRequest` with the `from` method. The full working example for [decoding can be found here](https://github.com/greymass/eosio-signing-request-demo/blob/master/examples/decode.js).
-
+Another application can now decode this request into an instance of a `SigningRequest` with the `from` method. 
 ```js
 const decoded = SigningRequest.from(uri, opts)
 ```
@@ -224,7 +212,7 @@ With an instance of a `SigningRequest` available, a signing application can now 
 - Templates the transaction, removing any placeholders and resolving it to be used by a specific end user.
 - Serializes the transaction for use within the signer.
 
-This step now requires that the application understand who the user is, and have access to the blockchain itself to retrieve TAPOS values. The full example of the code below to [resolve a signing request can be found here](https://github.com/greymass/eosio-signing-request-demo/blob/master/examples/resolve.js).
+This step now requires that the application understand who the user is, and have access to the blockchain itself to retrieve TAPOS values. 
 
 ```js
 // An encoded eosio:voteproducer transaction
